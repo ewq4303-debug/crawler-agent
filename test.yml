@@ -1,0 +1,58 @@
+name: test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      stock:
+        description: "stock number"
+        default: "2330"
+      date:
+        description: "data date (YYYYMMDD)"
+        default: "20260522"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crawler-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import / wiring sanity check
+        run: |
+          python -c "from runtime import Runtime; from runtime.action_handlers import HANDLERS; \
+                     assert set(HANDLERS)=={'http_request','extract_html','parse_table','save_csv'}; \
+                     print('handlers OK', list(HANDLERS))"
+
+      - name: Validate plan_hash is deterministic
+        run: |
+          python -c "import json,run; p=run.load_json(run.PLAN_PATH); \
+                     h1=run.compute_plan_hash(p); h2=run.compute_plan_hash(p); \
+                     assert h1==h2; print('plan_hash', h1)"
+
+      - name: Run crawler (live POC)
+        run: |
+          python run.py --stock "${{ github.event.inputs.stock || '2330' }}" \
+                        --date  "${{ github.event.inputs.date  || '20260522' }}"
+        continue-on-error: true
+
+      - name: Upload outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawler-output
+          path: |
+            crawler-agent/data/
+            crawler-agent/logs/runtime_state.json
+          if-no-files-found: ignore
