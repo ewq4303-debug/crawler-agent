@@ -1,0 +1,13 @@
+{
+  "retry": {
+    "max_attempts": 3,
+    "backoff_ms": 1000,
+    "retry_on_codes": [
+      "SELECTOR_NOT_FOUND",
+      "ATTR_NOT_FOUND",
+      "EMPTY_TABLE",
+      "NETWORK_ERROR",
+      "HTTP_ERROR"
+    ]
+  }
+}
