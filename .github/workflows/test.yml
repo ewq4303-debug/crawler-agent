@@ -15,9 +15,6 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: crawler-agent
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +50,6 @@ jobs:
         with:
           name: crawler-output
           path: |
-            crawler-agent/data/
-            crawler-agent/logs/runtime_state.json
+            data/
+            logs/runtime_state.json
           if-no-files-found: ignore
